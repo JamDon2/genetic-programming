@@ -3,7 +3,13 @@ import random
 
 from gc_generator import ProgramGenerator
 from gc_interpreter import Interpreter
-from gc_utils import random_inverse_square, run_program_timeout, get_variables
+from gc_utils import (
+    random_inverse_square,
+    run_program_timeout,
+    get_variables,
+    split_command,
+    combine_command,
+)
 
 
 def create_population(n=100, length_function=lambda: int(random_inverse_square() * 3)):
@@ -83,18 +89,16 @@ def mutate(program: str):
 
     line = random.randint(0, program.count("\n"))
 
-    old_line = program_lines[line].split()
+    old_line = split_command(program_lines[line].split())
 
-    while (
+    if (
         action in ["remove_line", "modify_line"]
-        and old_line[0] == "SET"
-        and program.count(old_line[1]) > 1
+        and old_line[0][0] == "SET"
+        and program.count(old_line[0][1]) > 1
     ):
-        action = random.choices(["add_line", "remove_line", "modify_line"], [3, 1, 2])[
-            0
-        ]
+        action = random.choices(["add_line", "modify_line"], [0.5, 0.35])[0]
         line = random.randint(0, program.count("\n"))
-        old_line = program_lines[line].split()
+        old_line = split_command(program_lines[line].split())
 
     variables = get_variables("\n".join(program_lines[:line]))
 
