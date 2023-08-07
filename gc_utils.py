@@ -17,6 +17,62 @@ def get_variables(program):
     return set(re.findall("v[0-9]+", program))
 
 
+def split_command(command: list[str]):
+    nest_level = 0
+    action_no = 0
+
+    main = []
+
+    commands = []
+
+    for word in command:
+        if word == ")":
+            nest_level -= 1
+
+            if nest_level == 0:
+                continue
+
+        if word == "(":
+            nest_level += 1
+
+            if nest_level == 1:
+                if action_no != 0:
+                    action_no += 1
+                commands.append([])
+                continue
+
+        if word == ";" and nest_level == 1:
+            action_no += 1
+            commands.append([])
+            continue
+
+        if nest_level == 0:
+            main.append(word)
+        else:
+            commands[action_no].append(word)
+
+    return main, commands
+
+
+def combine_command(main, commands):
+    result = []
+
+    result.extend(main)
+
+    if len(commands) > 0:
+        result.append("(")
+
+        for i, command in enumerate(commands):
+            result.extend(command)
+
+            if i != len(commands) - 1:
+                result.append(";")
+
+        result.append(")")
+
+    return result
+
+
 @timeout(0.01)
 def run_program_timeout(interpreter: Interpreter, code: str, inputs: list[int] = []):
     return interpreter.run(code, inputs)
