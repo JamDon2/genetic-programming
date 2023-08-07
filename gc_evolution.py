@@ -52,26 +52,11 @@ def fitness(program: str):
 
     tests_passed = 0
 
-    pass_index = None
-
     for test in tests:
         try:
             result = run_program_timeout(interpreter, program, test[0])
         except:
             break
-
-        # if pass_index is None:
-        #     try:
-        #         pass_index = result.index(test[1])
-        #     except:
-        #         pass
-
-        # if (
-        #     pass_index is None
-        #     or len(result) <= pass_index
-        #     or result[pass_index] != test[1]
-        # ):
-        #     break
 
         if result != test[1]:
             break
