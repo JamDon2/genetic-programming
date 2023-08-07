@@ -85,10 +85,6 @@ def mutate(program: str):
 
     old_line = program_lines[line].split()
 
-    if len(old_line) == 0:
-        print(program_lines)
-        print(line, old_line, action)
-
     while (
         action in ["remove_line", "modify_line"]
         and old_line[0] == "SET"
