@@ -78,10 +78,8 @@ def mutate(program: str):
 
     action = random.choices(["add_line", "remove_line", "modify_line"], [3, 1, 2])[0]
 
-    while len(program_lines) == 1 and action == "remove_line":
-        action = random.choices(["add_line", "remove_line", "modify_line"], [3, 1, 2])[
-            0
-        ]
+    if len(program_lines) == 1 and action == "remove_line":
+        action = random.choices(["add_line", "modify_line"], [0.5, 0.35])[0]
 
     line = random.randint(0, program.count("\n"))
 
