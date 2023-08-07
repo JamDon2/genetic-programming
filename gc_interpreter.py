@@ -64,6 +64,8 @@ class Interpreter:
                 nest_level += 1
 
                 if nest_level == 1:
+                    if action_no != 0:
+                        action_no += 1
                     commands.append([])
                     continue
 
