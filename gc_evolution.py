@@ -116,7 +116,27 @@ def mutate(program: str):
     elif action == "remove_line":
         program_lines.pop(line)
     elif action == "modify_line":
-        program_lines[line] = new_line
+        if len(old_line[1]) == 0:
+            program_lines[line] = new_line
+        else:
+            modify_action = random.choices(
+                ["replace", "replace_subcommand", "pop_out"], [0.35, 0.5, 0.15]
+            )[0]
+
+            if modify_action == "replace":
+                program_lines[line] = new_line
+            elif modify_action == "replace_subcommand":
+                subcommand = random.randrange(0, len(old_line[1]))
+
+                generator = ProgramGenerator(variables)
+
+                new_line = generator.generate_line(1)
+
+                old_line[1][subcommand] = new_line.split()
+
+                program_lines[line] = " ".join(combine_command(*old_line))
+            elif modify_action == "pop_out":
+                program_lines[line] = " ".join(random.choice(old_line[1]))
 
     should_mutate_again = random.random() < 0.6
 
