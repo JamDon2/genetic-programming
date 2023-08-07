@@ -10,10 +10,14 @@ class ProgramGenerator:
         self.variables = variables
         self.actions: dict[int, list[tuple[str, list[str]]]] = {
             0: [("SET", [])],
-            1: [("YIELD", ["var"]), ("INPUT", ["var"])],
+            1: [
+                ("YIELD", ["var"]),
+                ("INPUT", ["var"]),
+                ("MULTI", ["cob", "cmd", "cse", "cmd", "ccb"]),
+            ],
             2: [
-                ("IF", ["var", "cop", "var", "cob", "cmd", "cse", "cmd", "ccb"]),
-                ("LOOP", ["var", "var", "act"]),
+                ("IF", ["var", "cmp", "var", "cob", "cmd", "cse", "cmd", "ccb"]),
+                ("LOOP", ["var", "var", "cob", "cmd", "ccb"]),
                 ("ADD", ["var", "var"]),
                 ("SUB", ["var", "var"]),
                 ("MUL", ["var", "var"]),
@@ -62,7 +66,7 @@ class ProgramGenerator:
                     args.append(";")
                 elif arg_type == "ccb":
                     args.append(")")
-                elif arg_type == "cop":
+                elif arg_type == "cmp":
                     args.append(random.choice([">", ">=", "=", "<=", "<", "!="]))
 
             line = f"{action} {' '.join(args)}"
