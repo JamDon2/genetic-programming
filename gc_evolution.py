@@ -96,7 +96,7 @@ def mutate(program: str):
         and old_line[0][0] == "SET"
         and program.count(old_line[0][1]) > 1
     ):
-        action = random.choices(["add_line", "modify_line"], [0.5, 0.35])[0]
+        action = random.choices(["add_line"], [0.5])[0]
         line = random.randint(0, program.count("\n"))
         old_line = split_command(program_lines[line].split())
 
