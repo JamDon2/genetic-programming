@@ -9,7 +9,7 @@ class ProgramGenerator:
     def __init__(self, variables: set[str] = set()):
         self.variables = variables
         self.actions: dict[int, list[tuple[str, list[str]]]] = {
-            0: [("SET", [])],
+            0: [("SET", []), ("NOP", [])],
             1: [
                 ("YIELD", ["var"]),
                 ("INPUT", ["var"]),
