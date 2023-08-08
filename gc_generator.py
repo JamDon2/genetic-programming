@@ -26,6 +26,14 @@ class ProgramGenerator:
                 ("MOD", ["var", "var"]),
                 ("POW", ["var", "var"]),
             ],
+            3: [
+                ("ADD", ["var", "var", "var"]),
+                ("SUB", ["var", "var", "var"]),
+                ("MUL", ["var", "var", "var"]),
+                ("DIV", ["var", "var", "var"]),
+                ("MOD", ["var", "var", "var"]),
+                ("POW", ["var", "var", "var"]),
+            ],
         }
 
     def generate_action(self, max_variables, blacklist):
