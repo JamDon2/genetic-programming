@@ -129,72 +129,94 @@ class Interpreter:
                     self.variables[var_name] = self.inputs.pop()
 
     def add_variables(self, args, commands):
-        if len(args) != 2 or len(commands) != 0:
+        if (len(args) != 2 and len(args) != 3) or len(commands) != 0:
             return
 
-        var1, var2 = args
+        var1, var2, *rest = args
 
-        if var1 in self.variables and var2 in self.variables:
+        to = var1
+
+        if len(args) == 3:
+            to = rest[0]
+
+        if var1 in self.variables and var2 in self.variables and to in self.variables:
             result = self.variables[var1] + self.variables[var2]
-            self.variables[var1] = result
+            self.variables[to] = result
 
     def subtract_variables(self, args, commands):
-        if len(args) != 2 or len(commands) != 0:
+        if (len(args) != 2 and len(args) != 3) or len(commands) != 0:
             return
 
-        var1, var2 = args
+        var1, var2, *rest = args
 
-        if var1 in self.variables and var2 in self.variables:
+        to = var1
+
+        if len(args) == 3:
+            to = rest[0]
+
+        if var1 in self.variables and var2 in self.variables and to in self.variables:
             result = self.variables[var1] - self.variables[var2]
-            self.variables[var1] = result
+            self.variables[to] = result
 
     def multiply_variables(self, args, commands):
-        if len(args) != 2 or len(commands) != 0:
+        if (len(args) != 2 and len(args) != 3) or len(commands) != 0:
             return
 
-        var1, var2 = args
+        var1, var2, *rest = args
 
-        if var1 in self.variables and var2 in self.variables:
+        to = var1
+
+        if len(args) == 3:
+            to = rest[0]
+
+        if var1 in self.variables and var2 in self.variables and to in self.variables:
             result = self.variables[var1] * self.variables[var2]
-            self.variables[var1] = result
+            self.variables[to] = result
 
     def divide_variables(self, args, commands):
-        if len(args) != 2 or len(commands) != 0:
+        if (len(args) != 2 and len(args) != 3) or len(commands) != 0:
             return
 
-        var1, var2 = args
+        var1, var2, *rest = args
 
-        if (
-            var1 in self.variables
-            and var2 in self.variables
-            and self.variables[var2] != 0
-        ):
+        to = var1
+
+        if len(args) == 3:
+            to = rest[0]
+
+        if var1 in self.variables and var2 in self.variables and to in self.variables:
             result = self.variables[var1] // self.variables[var2]
-            self.variables[var1] = result
+            self.variables[to] = result
 
     def mod_variables(self, args, commands):
-        if len(args) != 2 or len(commands) != 0:
+        if (len(args) != 2 and len(args) != 3) or len(commands) != 0:
             return
 
-        var1, var2 = args
+        var1, var2, *rest = args
 
-        if (
-            var1 in self.variables
-            and var2 in self.variables
-            and self.variables[var2] != 0
-        ):
+        to = var1
+
+        if len(args) == 3:
+            to = rest[0]
+
+        if var1 in self.variables and var2 in self.variables and to in self.variables:
             result = self.variables[var1] % self.variables[var2]
-            self.variables[var1] = result
+            self.variables[to] = result
 
     def pow_variables(self, args, commands):
-        if len(args) != 2 or len(commands) != 0:
+        if (len(args) != 2 and len(args) != 3) or len(commands) != 0:
             return
 
-        var1, var2 = args
+        var1, var2, *rest = args
 
-        if var1 in self.variables and var2 in self.variables:
+        to = var1
+
+        if len(args) == 3:
+            to = rest[0]
+
+        if var1 in self.variables and var2 in self.variables and to in self.variables:
             result = self.variables[var1] ** self.variables[var2]
-            self.variables[var1] = result
+            self.variables[to] = result
 
     def if_comp(
         self,
