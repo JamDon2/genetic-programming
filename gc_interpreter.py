@@ -269,9 +269,13 @@ class Interpreter:
         results = []
 
         if count_var in self.variables and index_var in self.variables:
+            index_before = self.variables[index_var]
+
             for i in range(self.variables[count_var]):
                 self.variables[index_var] = i + 1
                 results.extend(self.run(" ".join(commands[0]), self.inputs, True))
+
+            self.variables[index_var] = index_before
 
         if not self.interactive:
             return results
