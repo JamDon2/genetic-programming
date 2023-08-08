@@ -223,7 +223,7 @@ class Interpreter:
         args,
         commands,
     ):
-        if len(args) != 3 or len(commands) != 2:
+        if len(args) != 3 or (len(commands) != 2 and len(commands) != 1):
             return
 
         left_var, operator, right_var = args
@@ -254,7 +254,7 @@ class Interpreter:
 
             if not self.interactive:
                 return result
-        else:
+        elif len(commands) == 2:
             result = self.run(" ".join(commands[1]), self.inputs, True)
 
             if not self.interactive:

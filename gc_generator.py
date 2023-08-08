@@ -17,6 +17,7 @@ class ProgramGenerator:
             ],
             2: [
                 ("COPY", ["var", "var"]),
+                ("IF", ["var", "cmp", "var", "cob", "cmd", "ccb"]),
                 ("IF", ["var", "cmp", "var", "cob", "cmd", "cse", "cmd", "ccb"]),
                 ("LOOP", ["var", "var", "cob", "cmd", "ccb"]),
                 ("ADD", ["var", "var"]),
