@@ -253,7 +253,7 @@ class Interpreter:
 
         return results
 
-    def nop(self):
+    def nop(self, args, commands):
         pass
 
 
