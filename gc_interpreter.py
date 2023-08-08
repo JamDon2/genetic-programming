@@ -5,6 +5,7 @@ class Interpreter:
         self.inputs = []
         self.actions = {
             "SET": self.set_variable,
+            "COPY": self.copy_variable,
             "YIELD": self.yield_variable,
             "INPUT": self.input_number,
             "ADD": self.add_variables,
@@ -88,6 +89,17 @@ class Interpreter:
         var_name, value = args
 
         self.variables[var_name] = int(value)
+
+    def copy_variable(self, args, commands):
+        if len(args) != 2 or len(commands) != 0:
+            return
+
+        to_var, from_var = args
+
+        if to_var not in self.variables or from_var not in self.variables:
+            return
+
+        self.variables[to_var] = self.variables[from_var]
 
     def yield_variable(self, args, commands):
         if len(args) != 1 or len(commands) != 0:
