@@ -107,7 +107,9 @@ def mutate(program: str):
     new_line = generator.generate_line().split()
 
     if new_line[0] == "SET":
-        new_line[1] = f"v{max([int(var[1:]) for var in get_variables(program)]) + 1}"
+        new_line[
+            1
+        ] = f"v{max([int(var[1:]) for var in get_variables(program)] + [0]) + 1}"
 
     new_line = " ".join(new_line)
 
