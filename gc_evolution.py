@@ -1,11 +1,12 @@
 import math
 import random
+from typing import Callable
 
 from gc_generator import ProgramGenerator
 from gc_interpreter import Interpreter
 from gc_utils import (
+    Runner,
     random_inverse_square,
-    run_program_timeout,
     get_variables,
     split_command,
     combine_command,
@@ -17,8 +18,14 @@ def create_population(n=100, length_function=lambda: int(random_inverse_square()
     return [generator.generate_program(length_function()) for x in range(n)]
 
 
-def evaluate_population(population, fitness_function):
-    fitness_scores = [fitness_function(program) for program in population]
+def evaluate_population(
+    population: list[str],
+    fitness_function: Callable[[str, Runner], int],
+    runner: Runner,
+) -> tuple[list[str], list[int]]:
+    fitness_scores = [
+        fitness_function(program, runner, i) for i, program in enumerate(population)
+    ]
 
     return [
         program
@@ -29,7 +36,7 @@ def evaluate_population(population, fitness_function):
     ], sorted(fitness_scores, reverse=True)
 
 
-def fitness(program: str):
+def fitness(program: str, runner: Runner, i) -> int:
     fitness_score = 0
 
     if len(program.split("\n")) > 10:
@@ -37,8 +44,6 @@ def fitness(program: str):
     else:
         fitness_score -= len(program.split("\n"))
         fitness_score -= len(program) // 5
-
-    interpreter = Interpreter(False)
 
     tests = [
         [[1], [9]],
@@ -60,14 +65,19 @@ def fitness(program: str):
 
     for test in tests:
         try:
-            result = run_program_timeout(interpreter, program, test[0])
-        except:
-            break
+            result = runner.run(program, test[0])
 
-        if result != test[1]:
-            break
+            if result is None:
+                fitness_score -= 500
+                break
 
-        tests_passed += 1
+            if result != test[1]:
+                break
+
+            tests_passed += 1
+        except Exception as err:
+            print(err)
+            break
 
     fitness_score += tests_passed * 100
 
@@ -107,9 +117,9 @@ def mutate(program: str):
     new_line = generator.generate_line().split()
 
     if new_line[0] == "SET":
-        new_line[
-            1
-        ] = f"v{max([int(var[1:]) for var in get_variables(program)] + [0]) + 1}"
+        new_line[1] = (
+            f"v{max([int(var[1:]) for var in get_variables(program)] + [0]) + 1}"
+        )
 
     new_line = " ".join(new_line)
 
@@ -177,23 +187,28 @@ def reproduce(
     return new_population
 
 
-population = create_population(10000)
+if __name__ == "__main__":
+    population = create_population(10000)
 
-generation = 0
+    generation = 0
 
-while True:
-    population, fitness_scores = evaluate_population(population, fitness)
+    interpreter = Interpreter(False)
 
-    print(
-        f"Best of generation {generation}:",
-        fitness_scores[0],
-        fitness_scores[1],
-        fitness_scores[2],
-    )
+    runner = Runner(interpreter)
 
-    with open(f"outputs/g{generation}.gc", "w") as f:
-        f.write(population[0])
+    while True:
+        population, fitness_scores = evaluate_population(population, fitness, runner)
 
-    population = reproduce(population, mutate)
+        print(
+            f"Best of generation {generation}:",
+            fitness_scores[0],
+            fitness_scores[1],
+            fitness_scores[2],
+        )
 
-    generation += 1
+        with open(f"outputs/g{generation}.gc", "w") as f:
+            f.write(population[0])
+
+        population = reproduce(population, mutate)
+
+        generation += 1

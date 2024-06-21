@@ -1,6 +1,7 @@
 import random
 import re
-from timeout_decorator import timeout
+from multiprocessing import Process, Queue
+import queue
 
 from gc_interpreter import Interpreter
 
@@ -73,6 +74,42 @@ def combine_command(main, commands):
     return result
 
 
-@timeout(0.01)
-def run_program_timeout(interpreter: Interpreter, code: str, inputs: list[int] = []):
-    return interpreter.run(code, inputs)
+class Runner:
+    def __init__(self, interpreter: Interpreter) -> None:
+        self.interpreter = interpreter
+        self.worker = None
+        self.task_queue = None
+        self.output_queue = None
+
+    def work(self) -> None:
+        while True:
+            code, inputs = self.task_queue.get(True)
+            try:
+                result = self.interpreter.run(code, inputs)
+                self.output_queue.put(result)
+            except:
+                self.output_queue.put(None)
+
+    def create_worker(self, replace=False) -> None:
+        if not replace and self.worker:
+            return
+
+        if self.worker:
+            self.worker.kill()
+
+        self.task_queue, self.output_queue = Queue(), Queue()
+
+        self.worker = Process(target=self.work, args=())
+
+        self.worker.start()
+
+    def run(self, code: str, inputs: list[int] = []) -> list[int]:
+        self.create_worker()
+
+        self.task_queue.put((code, inputs))
+
+        try:
+            return self.output_queue.get(True, 0.1)
+        except queue.Empty:
+            self.create_worker(True)
+            return None
