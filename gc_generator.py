@@ -1,9 +1,6 @@
 import random
 import itertools
 
-from gc_interpreter import Interpreter
-from gc_utils import run_program_timeout, random_inverse_square
-
 
 class ProgramGenerator:
     def __init__(self, variables: set[str] = set()):
@@ -108,61 +105,3 @@ if __name__ == "__main__":
     generator = ProgramGenerator()
 
     print(generator.generate_program(20))
-    # max_tests = 0
-    # file_prefix = "outputs/m"
-    # program_count = 0
-    # while True:
-    #     num_lines = int(random_inverse_square() * 2)
-
-    #     generator = ProgramGenerator()
-    #     random_program = generator.generate_program(num_lines)
-
-    #     interpreter = Interpreter(False)
-
-    #     tests = [
-    #         [[0], 10],
-    #         [[1], 10],
-    #         [[2], 10],
-    #         [[5], 10],
-    #         [[10], 0],
-    #         [[15], 10],
-    #         [[100], 10],
-    #         [[150], 10],
-    #     ]
-
-    #     passed = True
-    #     tests_passed = 0
-
-    #     pass_index = None
-
-    #     for test in tests:
-    #         try:
-    #             result = run_program_timeout(interpreter, random_program, test[0])
-    #         except:
-    #             passed = False
-    #             break
-
-    #         if pass_index is None:
-    #             try:
-    #                 pass_index = result.index(test[1])
-    #             except:
-    #                 pass
-
-    #         if (
-    #             pass_index is None
-    #             or len(result) <= pass_index
-    #             or result[pass_index] != test[1]
-    #         ):
-    #             passed = False
-    #             break
-
-    #         tests_passed += 1
-
-    #     if tests_passed > max_tests:
-    #         print(tests_passed)
-    #         max_tests = tests_passed
-    #         with open(f"{file_prefix}{tests_passed}.gc", "w") as f:
-    #             f.write(random_program)
-
-    #     if passed:
-    #         exit()
