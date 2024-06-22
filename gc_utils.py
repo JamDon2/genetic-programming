@@ -85,7 +85,7 @@ class Runner:
         while True:
             code, inputs = self.task_queue.get(True)
             try:
-                result = self.interpreter.run(code, inputs)
+                result = self.interpreter.run(code, inputs, timeout=0.1)
                 self.output_queue.put(result)
             except:
                 self.output_queue.put(None)
@@ -108,8 +108,4 @@ class Runner:
 
         self.task_queue.put((code, inputs))
 
-        try:
-            return self.output_queue.get(True, 0.1)
-        except queue.Empty:
-            self.create_worker(True)
-            return None
+        return self.output_queue.get(True)

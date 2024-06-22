@@ -1,3 +1,11 @@
+import time
+from typing import Optional
+
+
+class TooLargeException(Exception):
+    pass
+
+
 class Interpreter:
     def __init__(self, interactive: bool = True):
         self.interactive = interactive
@@ -19,11 +27,26 @@ class Interpreter:
             "MULTI": self.multi,
             "NOP": self.nop,
         }
+        self.timeout = None
+        self.start_time = None
 
-    def run(self, code, inputs: list[int] = [], recurse: bool = False):
+    def run(
+        self,
+        code: str,
+        inputs: list[int] = [],
+        recurse: bool = False,
+        timeout: Optional[int] = None,
+    ):
         lines = code.split("\n")
 
         self.inputs = inputs.copy()
+
+        if timeout:
+            self.timeout = timeout
+            self.start_time = time.time()
+
+        if self.timeout and time.time() - self.start_time > self.timeout:
+            raise TimeoutError("Timeout exceeded")
 
         result = []
 
@@ -43,6 +66,8 @@ class Interpreter:
 
         if not recurse:
             self.variables = {}
+            self.timeout = None
+            self.start_time = None
 
         return result
 
@@ -81,6 +106,13 @@ class Interpreter:
                 commands[action_no].append(word)
 
         return main, commands
+
+    def check_variables(self, *variables: str, threshold=10**15):
+        for variable in variables:
+            if self.variables[variable] > threshold:
+                return False
+
+        return True
 
     def set_variable(self, args, commands):
         if len(args) != 2 or len(commands) != 0:
@@ -134,6 +166,9 @@ class Interpreter:
 
         var1, var2, *rest = args
 
+        if not self.check_variables(var1, var2):
+            raise TooLargeException()
+
         to = var1
 
         if len(args) == 3:
@@ -148,6 +183,9 @@ class Interpreter:
             return
 
         var1, var2, *rest = args
+
+        if not self.check_variables(var1, var2):
+            raise TooLargeException()
 
         to = var1
 
@@ -164,6 +202,9 @@ class Interpreter:
 
         var1, var2, *rest = args
 
+        if not self.check_variables(var1, var2, threshold=10**10):
+            raise TooLargeException()
+
         to = var1
 
         if len(args) == 3:
@@ -178,6 +219,9 @@ class Interpreter:
             return
 
         var1, var2, *rest = args
+
+        if not self.check_variables(var1, var2, threshold=10**10):
+            raise TooLargeException()
 
         to = var1
 
@@ -194,6 +238,9 @@ class Interpreter:
 
         var1, var2, *rest = args
 
+        if not self.check_variables(var1, var2, threshold=10**10):
+            raise TooLargeException()
+
         to = var1
 
         if len(args) == 3:
@@ -208,6 +255,12 @@ class Interpreter:
             return
 
         var1, var2, *rest = args
+
+        if (
+            not self.check_variables(var1, var2, threshold=10**8)
+            or self.variables[var2] > 100
+        ):
+            raise TooLargeException()
 
         to = var1
 
@@ -269,6 +322,9 @@ class Interpreter:
         results = []
 
         if count_var in self.variables and index_var in self.variables:
+            if not self.check_variables(count_var, threshold=10**5):
+                raise TooLargeException()
+
             index_before = self.variables[index_var]
 
             for i in range(self.variables[count_var]):
