@@ -65,18 +65,20 @@ def fitness(program: str, runner: Runner, i) -> int:
 
     for test in tests:
         try:
-            result = runner.run(program, test[0])
+            result, runtime = runner.run(program, test[0])
 
             if result is None:
                 fitness_score -= 500
                 break
+
+            fitness_score -= math.ceil(runtime * 10000)
 
             if result != test[1]:
                 break
 
             tests_passed += 1
         except Exception as err:
-            print(err)
+            print("err", err, type(err))
             break
 
     fitness_score += tests_passed * 100
