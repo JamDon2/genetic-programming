@@ -1,7 +1,7 @@
 import random
 import re
 from multiprocessing import Process, Queue
-import queue
+import time
 
 from gc_interpreter import Interpreter
 
@@ -84,11 +84,13 @@ class Runner:
     def work(self) -> None:
         while True:
             code, inputs = self.task_queue.get(True)
+            start = time.time()
             try:
                 result = self.interpreter.run(code, inputs, timeout=0.1)
-                self.output_queue.put(result)
+                end = time.time()
+                self.output_queue.put((result, end - start))
             except:
-                self.output_queue.put(None)
+                self.output_queue.put((None, None))
 
     def create_worker(self, replace=False) -> None:
         if not replace and self.worker:
@@ -103,7 +105,7 @@ class Runner:
 
         self.worker.start()
 
-    def run(self, code: str, inputs: list[int] = []) -> list[int]:
+    def run(self, code: str, inputs: list[int] = []) -> tuple[list[int], int]:
         self.create_worker()
 
         self.task_queue.put((code, inputs))
