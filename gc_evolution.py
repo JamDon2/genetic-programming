@@ -11,6 +11,7 @@ from gc_utils import (
     split_command,
     combine_command,
 )
+from gc_tests import tests
 
 
 def create_population(n=100, length_function=lambda: int(random_inverse_square() * 3)):
@@ -20,11 +21,18 @@ def create_population(n=100, length_function=lambda: int(random_inverse_square()
 
 def evaluate_population(
     population: list[str],
-    fitness_function: Callable[[str, Runner], int],
+    fitness_function: Callable[[str, dict[int, tuple[list[int], int]]], int],
     runner: Runner,
 ) -> tuple[list[str], list[int]]:
+    inputs = [test[0] for test in tests]
+
+    runner.queue_tests(population, inputs)
+
+    runner.collect_results()
+
     fitness_scores = [
-        fitness_function(program, runner, i) for i, program in enumerate(population)
+        fitness_function(program, runner.get_program_results(i))
+        for i, program in enumerate(population)
     ]
 
     return [
@@ -36,7 +44,7 @@ def evaluate_population(
     ], sorted(fitness_scores, reverse=True)
 
 
-def fitness(program: str, runner: Runner, i) -> int:
+def fitness(program: str, results: dict[int, tuple[list[int], int]]) -> int:
     fitness_score = 0
 
     if len(program.split("\n")) > 10:
@@ -44,16 +52,6 @@ def fitness(program: str, runner: Runner, i) -> int:
     else:
         fitness_score -= len(program.split("\n"))
         fitness_score -= len(program) // 5
-
-    tests = [
-        [[1], [9]],
-        [[8], [4]],
-        [[9], [9]],
-        [[4], [4]],
-        [[3], [9]],
-        [[6], [4]],
-        [[77], [9]],
-    ]
 
     yield_target = 1
     input_target = 1
@@ -63,23 +61,21 @@ def fitness(program: str, runner: Runner, i) -> int:
 
     tests_passed = 0
 
-    for test in tests:
-        try:
-            result, runtime = runner.run(program, test[0])
+    test_results = [test[1] for test in tests]
 
-            if result is None:
-                fitness_score -= 500
-                break
+    for i, test_result in enumerate(test_results):
+        result, runtime = results[i]
 
-            fitness_score -= math.ceil(runtime * 10000)
-
-            if result != test[1]:
-                break
-
-            tests_passed += 1
-        except Exception as err:
-            print("err", err, type(err))
+        if result is None:
+            fitness_score -= 500
             break
+
+        fitness_score -= math.ceil(runtime * 10000)
+
+        if result != test_result:
+            break
+
+        tests_passed += 1
 
     fitness_score += tests_passed * 100
 
@@ -165,8 +161,8 @@ def mutate(program: str):
 def reproduce(
     population: list[str],
     mutation_function,
-    survive_top=0.25,
-    survive_random=0.1,
+    survive_top=0.1,
+    survive_random=0.20,
     new_random=0.25,
 ):
     survived_top = math.ceil(len(population) * survive_top)
@@ -197,6 +193,8 @@ if __name__ == "__main__":
     interpreter = Interpreter(False)
 
     runner = Runner(interpreter)
+
+    runner.create_workers(24)
 
     while True:
         population, fitness_scores = evaluate_population(population, fitness, runner)
