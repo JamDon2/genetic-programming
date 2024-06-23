@@ -111,3 +111,14 @@ class Runner:
         self.task_queue.put((code, inputs))
 
         return self.output_queue.get(True)
+
+    def queue(self, code: str, inputs: list[int] = []) -> None:
+        self.task_queue.put((code, inputs))
+
+    def get(self, amount: int) -> list[tuple[list[int], int]]:
+        outputs = []
+
+        while len(outputs) < amount:
+            outputs.append(self.output_queue.get(timeout=0.1))
+
+        return outputs
