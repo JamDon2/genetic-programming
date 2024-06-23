@@ -129,6 +129,13 @@ class Runner:
                 self.task_queue.put((program, test, program_id, test_id))
                 self.queued += 1
 
+    def queue_test(
+        self, programs: list[tuple[str, int]], test: list[int], test_id: int
+    ) -> None:
+        for program_id, (program, program_id) in enumerate(programs):
+            self.task_queue.put((program, test, program_id, test_id))
+            self.queued += 1
+
     def collect_results(self) -> None:
         self.results = {}
 
