@@ -115,6 +115,10 @@ class Runner:
     def queue(self, code: str, inputs: list[int] = []) -> None:
         self.task_queue.put((code, inputs))
 
+    def queue_many(self, programs: list[str], inputs: list[list[int]] = []) -> None:
+        for program, input in zip(programs, inputs):
+            self.task_queue.put((program, input))
+
     def get(self, amount: int) -> list[tuple[list[int], int]]:
         outputs = []
 
