@@ -74,55 +74,65 @@ def combine_command(main, commands):
     return result
 
 
+class AlreadyExistsException(Exception):
+    pass
+
+
 class Runner:
     def __init__(self, interpreter: Interpreter) -> None:
         self.interpreter = interpreter
-        self.worker = None
+        self.workers = []
         self.task_queue = None
         self.output_queue = None
+        self.results: dict[int, dict[int, tuple[list[int], int]]] = {}
+        self.queued = 0
 
     def work(self) -> None:
         while True:
-            code, inputs = self.task_queue.get(True)
+            code, inputs, program_id, test_id = self.task_queue.get(True)
             start = time.time()
             try:
                 result = self.interpreter.run(code, inputs, timeout=0.1)
                 end = time.time()
-                self.output_queue.put((result, end - start))
+                self.output_queue.put((result, end - start, program_id, test_id))
             except:
-                self.output_queue.put((None, None))
+                self.output_queue.put((None, None, program_id, test_id))
 
-    def create_worker(self, replace=False) -> None:
-        if not replace and self.worker:
-            return
-
-        if self.worker:
-            self.worker.kill()
+    def create_workers(self, amount=1) -> None:
+        if len(self.workers) > 0:
+            raise AlreadyExistsException()
 
         self.task_queue, self.output_queue = Queue(), Queue()
 
-        self.worker = Process(target=self.work, args=())
+        self.workers = [Process(target=self.work, args=()) for x in range(amount)]
 
-        self.worker.start()
+        for worker in self.workers:
+            worker.start()
 
-    def run(self, code: str, inputs: list[int] = []) -> tuple[list[int], int]:
-        self.create_worker()
+    def kill_workers(self) -> None:
+        for worker in self.workers:
+            worker.kill()
 
-        self.task_queue.put((code, inputs))
+        self.workers = []
 
-        return self.output_queue.get(True)
+    def queue_tests(self, programs: list[str], tests: list[list[int]] = []) -> None:
+        for program_id, program in enumerate(programs):
+            for test_id, test in enumerate(tests):
+                self.task_queue.put((program, test, program_id, test_id))
+                self.queued += 1
 
-    def queue(self, code: str, inputs: list[int] = []) -> None:
-        self.task_queue.put((code, inputs))
+    def collect_results(self) -> None:
+        self.results = {}
 
-    def queue_many(self, programs: list[str], inputs: list[int] = []) -> None:
-        for program in programs:
-            self.task_queue.put((program, inputs))
+        for i in range(self.queued):
+            results, runtime, program_id, test_id = self.output_queue.get(timeout=0.1)
 
-    def get(self, amount: int) -> list[tuple[list[int], int]]:
-        outputs = []
+            if program_id not in self.results:
+                self.results[program_id] = {}
 
-        while len(outputs) < amount:
-            outputs.append(self.output_queue.get(timeout=0.1))
+            self.results[program_id][test_id] = (results, runtime)
 
-        return outputs
+        self.queued = 0
+
+    def get_program_results(self, program_id: int) -> dict[int, tuple[list[int], int]]:
+        return self.results[program_id]
