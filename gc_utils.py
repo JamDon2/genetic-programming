@@ -78,6 +78,18 @@ class AlreadyExistsException(Exception):
     pass
 
 
+def work(interpreter: Interpreter, task_queue: Queue, output_queue: Queue) -> None:
+    while True:
+        code, inputs, program_id, test_id = task_queue.get(True)
+        start = time.time()
+        try:
+            result = interpreter.run(code, inputs, timeout=0.1)
+            end = time.time()
+            output_queue.put((result, end - start, program_id, test_id))
+        except:
+            output_queue.put((None, None, program_id, test_id))
+
+
 class Runner:
     def __init__(self, interpreter: Interpreter) -> None:
         self.interpreter = interpreter
@@ -87,24 +99,20 @@ class Runner:
         self.results: dict[int, dict[int, tuple[list[int], int]]] = {}
         self.queued = 0
 
-    def work(self) -> None:
-        while True:
-            code, inputs, program_id, test_id = self.task_queue.get(True)
-            start = time.time()
-            try:
-                result = self.interpreter.run(code, inputs, timeout=0.1)
-                end = time.time()
-                self.output_queue.put((result, end - start, program_id, test_id))
-            except:
-                self.output_queue.put((None, None, program_id, test_id))
-
     def create_workers(self, amount=1) -> None:
         if len(self.workers) > 0:
             raise AlreadyExistsException()
 
-        self.task_queue, self.output_queue = Queue(), Queue()
+        self.task_queue = Queue()
+        self.output_queue = Queue()
 
-        self.workers = [Process(target=self.work, args=()) for x in range(amount)]
+        for i in range(amount):
+            self.workers.append(
+                Process(
+                    target=work,
+                    args=(self.interpreter, self.task_queue, self.output_queue),
+                )
+            )
 
         for worker in self.workers:
             worker.start()
