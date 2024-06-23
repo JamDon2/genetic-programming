@@ -44,7 +44,7 @@ def evaluate_population(
     ], sorted(fitness_scores, reverse=True)
 
 
-def fitness(program: str, results: dict[int, tuple[list[int], int]]) -> int:
+def static_fitness(program: str) -> int:
     fitness_score = 0
 
     if len(program.split("\n")) > 10:
@@ -58,26 +58,6 @@ def fitness(program: str, results: dict[int, tuple[list[int], int]]) -> int:
 
     fitness_score -= abs(yield_target - program.count("YIELD")) * 4
     fitness_score -= abs(input_target - program.count("INPUT")) * 4
-
-    tests_passed = 0
-
-    test_results = [test[1] for test in tests]
-
-    for i, test_result in enumerate(test_results):
-        result, runtime = results[i]
-
-        if result is None:
-            fitness_score -= 500
-            break
-
-        fitness_score -= math.ceil(runtime * 10000)
-
-        if result != test_result:
-            break
-
-        tests_passed += 1
-
-    fitness_score += tests_passed * 100
 
     return fitness_score
 
@@ -194,10 +174,12 @@ if __name__ == "__main__":
 
     runner = Runner(interpreter)
 
-    runner.create_workers(24)
+    runner.create_workers(1)
 
     while True:
-        population, fitness_scores = evaluate_population(population, fitness, runner)
+        population, fitness_scores = evaluate_population(
+            population, static_fitness, runner
+        )
 
         print(
             f"Best of generation {generation}:",

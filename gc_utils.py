@@ -123,29 +123,18 @@ class Runner:
 
         self.workers = []
 
-    def queue_tests(self, programs: list[str], tests: list[list[int]] = []) -> None:
-        for program_id, program in enumerate(programs):
-            for test_id, test in enumerate(tests):
-                self.task_queue.put((program, test, program_id, test_id))
-                self.queued += 1
-
-    def queue_test(
-        self, programs: list[tuple[str, int]], test: list[int], test_id: int
-    ) -> None:
+    def queue_test(self, programs: list[tuple[str, int]], test: list[int]) -> None:
         for program_id, (program, program_id) in enumerate(programs):
-            self.task_queue.put((program, test, program_id, test_id))
+            self.task_queue.put((program, test, program_id))
             self.queued += 1
 
     def collect_results(self) -> None:
         self.results = {}
 
         for i in range(self.queued):
-            results, runtime, program_id, test_id = self.output_queue.get(timeout=0.2)
+            results, runtime, program_id = self.output_queue.get(timeout=0.2)
 
-            if program_id not in self.results:
-                self.results[program_id] = {}
-
-            self.results[program_id][test_id] = (results, runtime)
+            self.results[program_id] = (results, runtime)
 
         self.queued = 0
 
