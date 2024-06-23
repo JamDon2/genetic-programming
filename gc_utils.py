@@ -133,7 +133,7 @@ class Runner:
         self.results = {}
 
         for i in range(self.queued):
-            results, runtime, program_id, test_id = self.output_queue.get(timeout=0.1)
+            results, runtime, program_id, test_id = self.output_queue.get(timeout=0.2)
 
             if program_id not in self.results:
                 self.results[program_id] = {}
