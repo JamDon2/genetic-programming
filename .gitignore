@@ -160,3 +160,4 @@ cython_debug/
 #.idea/
 
 outputs*/
+gc_tests.py
