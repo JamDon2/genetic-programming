@@ -96,7 +96,7 @@ class Runner:
         self.workers = []
         self.task_queue = None
         self.output_queue = None
-        self.results: dict[int, dict[int, tuple[list[int], int]]] = {}
+        self.results: dict[int, tuple[list[int], int]] = {}
         self.queued = 0
 
     def create_workers(self, amount=1) -> None:
