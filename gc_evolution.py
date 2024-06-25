@@ -26,10 +26,6 @@ def evaluate_population(
 ) -> tuple[list[str], list[int]]:
     inputs = [test[0] for test in tests]
 
-    runner.queue_tests(population, inputs)
-
-    runner.collect_results()
-
     fitness_scores = [
         fitness_function(program, runner.get_program_results(i))
         for i, program in enumerate(population)
@@ -60,6 +56,22 @@ def static_fitness(program: str) -> int:
     fitness_score -= abs(input_target - program.count("INPUT")) * 4
 
     return fitness_score
+
+
+def fitness(population: list[str], runner: Runner):
+    survivors = population
+
+    fitnes_scores = {}
+
+    for test in tests:
+        inputs = [x[0] for x in test]
+
+        runner.queue_test(population, inputs)
+
+        runner.collect_results()
+
+        for program_id, output in runner.results.items():
+            pass
 
 
 def mutate(program: str):
