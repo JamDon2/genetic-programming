@@ -59,19 +59,32 @@ def static_fitness(program: str) -> int:
 
 
 def fitness(population: list[str], runner: Runner):
-    survivors = population
+    survivors = [(program, i) for i, program in enumerate(population)]
 
-    fitnes_scores = {}
+    fitness_scores = {}
 
     for test in tests:
-        inputs = [x[0] for x in test]
+        input = test[0]
 
-        runner.queue_test(population, inputs)
+        runner.queue_test(survivors, input)
 
         runner.collect_results()
 
-        for program_id, output in runner.results.items():
-            pass
+        target = test[1]
+
+        survivors = []
+
+        for program_id, (output, runtime) in runner.results.items():
+            if program_id not in fitness_scores:
+                fitness_scores[program_id] = 0
+
+            if output != target:
+                continue
+
+            fitness_scores[program_id] += 100
+            fitness_scores -= math.ceil(runtime * 10000)
+
+            survivors.append((population[program_id], program_id))
 
 
 def mutate(program: str):
