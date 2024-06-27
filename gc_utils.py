@@ -80,14 +80,14 @@ class AlreadyExistsException(Exception):
 
 def work(interpreter: Interpreter, task_queue: Queue, output_queue: Queue) -> None:
     while True:
-        code, inputs, program_id, test_id = task_queue.get(True)
+        code, inputs, program_id = task_queue.get(True)
         start = time.time()
         try:
             result = interpreter.run(code, inputs, timeout=0.1)
             end = time.time()
-            output_queue.put((result, end - start, program_id, test_id))
+            output_queue.put((result, end - start, program_id))
         except:
-            output_queue.put((None, None, program_id, test_id))
+            output_queue.put((None, None, program_id))
 
 
 class Runner:
