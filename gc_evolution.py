@@ -19,27 +19,6 @@ def create_population(n=100, length_function=lambda: int(random_inverse_square()
     return [generator.generate_program(length_function()) for x in range(n)]
 
 
-def evaluate_population(
-    population: list[str],
-    fitness_function: Callable[[str, dict[int, tuple[list[int], int]]], int],
-    runner: Runner,
-) -> tuple[list[str], list[int]]:
-    inputs = [test[0] for test in tests]
-
-    fitness_scores = [
-        fitness_function(program, runner.get_program_results(i))
-        for i, program in enumerate(population)
-    ]
-
-    return [
-        program
-        for _, program in sorted(
-            zip(fitness_scores, population),
-            reverse=True,
-        )
-    ], sorted(fitness_scores, reverse=True)
-
-
 def static_fitness(program: str) -> int:
     fitness_score = 0
 
@@ -58,10 +37,15 @@ def static_fitness(program: str) -> int:
     return fitness_score
 
 
-def fitness(population: list[str], runner: Runner):
-    survivors = [(program, i) for i, program in enumerate(population)]
+def fitness(population: list[str], runner: Runner) -> list[int]:
+    survivors: list[tuple[str, int]] = [
+        (program, i) for i, program in enumerate(population)
+    ]
 
-    fitness_scores = {}
+    fitness_scores = [0] * len(population)
+
+    for program_id, program in enumerate(population):
+        fitness_scores[program_id] += static_fitness(program)
 
     for test in tests:
         input = test[0]
@@ -75,16 +59,30 @@ def fitness(population: list[str], runner: Runner):
         survivors = []
 
         for program_id, (output, runtime) in runner.results.items():
-            if program_id not in fitness_scores:
-                fitness_scores[program_id] = 0
-
             if output != target:
                 continue
 
             fitness_scores[program_id] += 100
-            fitness_scores -= math.ceil(runtime * 10000)
+            fitness_scores[program_id] -= math.ceil(runtime * 10000)
 
             survivors.append((population[program_id], program_id))
+
+    return fitness_scores
+
+
+def evaluate_population(
+    population: list[str],
+    runner: Runner,
+) -> tuple[list[str], list[int]]:
+    fitness_scores = fitness(population, runner)
+
+    return [
+        program
+        for _, program in sorted(
+            zip(fitness_scores, population),
+            reverse=True,
+        )
+    ], sorted(fitness_scores, reverse=True)
 
 
 def mutate(program: str):
@@ -202,9 +200,7 @@ if __name__ == "__main__":
     runner.create_workers(1)
 
     while True:
-        population, fitness_scores = evaluate_population(
-            population, static_fitness, runner
-        )
+        population, fitness_scores = evaluate_population(population, runner)
 
         print(
             f"Best of generation {generation}:",
