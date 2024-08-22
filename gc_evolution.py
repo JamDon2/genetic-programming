@@ -13,6 +13,31 @@ from gc_utils import (
 )
 
 
+# Magic values
+MUTATE_CHANCE = 0.7
+
+MUTATE_ACTION_CHANCES = [3, 1, 2]  # add_line, remove_line, modify_line
+
+# If only one line exists, and action was remove line
+MUTATE_FALLBACK_CHANCES = [0.5, 0.35]  # add_line, modify_line
+
+MUTATE_SUBCOMMAND_CHANCES = [
+    0.35,
+    0.5,
+    0.15,
+]  # replace, replace_subcommand, pop_out
+
+REMUTATE_CHANCE = 0.6
+
+
+SURVIVE_TOP = 0.1  # Top from previous gen
+SURVIVE_RANDOM = 0.20  # Random from previous gen
+NEW_RANDOM = 0.25
+
+SCORE_PER_TEST = 100
+RUNTIME_PENALTY_MULTIPLIER = 10000
+
+
 def create_population(n=100, length_function=lambda: int(random_inverse_square() * 3)):
     generator = ProgramGenerator()
     return [generator.generate_program(length_function()) for x in range(n)]
@@ -63,8 +88,10 @@ def fitness(
             if output != target:
                 continue
 
-            fitness_scores[program_id] += 100
-            fitness_scores[program_id] -= math.ceil(runtime * 10000)
+            fitness_scores[program_id] += SCORE_PER_TEST
+            fitness_scores[program_id] -= math.ceil(
+                runtime * RUNTIME_PENALTY_MULTIPLIER
+            )
 
             survivors.append((population[program_id], program_id))
 
@@ -86,17 +113,19 @@ def evaluate_population(
 
 
 def mutate(program: str):
-    should_mutate = random.random() > 0.3
+    should_mutate = random.random() < MUTATE_CHANCE
 
     if not should_mutate:
         return program
 
     program_lines = program.split("\n")
 
-    action = random.choices(["add_line", "remove_line", "modify_line"], [3, 1, 2])[0]
+    action = random.choices(
+        ["add_line", "remove_line", "modify_line"], MUTATE_ACTION_CHANCES
+    )[0]
 
     if len(program_lines) == 1 and action == "remove_line":
-        action = random.choices(["add_line", "modify_line"], [0.5, 0.35])[0]
+        action = random.choices(["add_line", "modify_line"], MUTATE_FALLBACK_CHANCES)[0]
 
     line = random.randint(0, program.count("\n"))
 
@@ -107,7 +136,7 @@ def mutate(program: str):
         and old_line[0][0] == "SET"
         and program.count(old_line[0][1]) > 1
     ):
-        action = random.choices(["add_line"], [0.5])[0]
+        action = "add_line"
         line = random.randint(0, program.count("\n"))
         old_line = split_command(program_lines[line].split())
 
@@ -133,7 +162,7 @@ def mutate(program: str):
             program_lines[line] = new_line
         else:
             modify_action = random.choices(
-                ["replace", "replace_subcommand", "pop_out"], [0.35, 0.5, 0.15]
+                ["replace", "replace_subcommand", "pop_out"], MUTATE_SUBCOMMAND_CHANCES
             )[0]
 
             if modify_action == "replace":
@@ -151,7 +180,7 @@ def mutate(program: str):
             elif modify_action == "pop_out":
                 program_lines[line] = " ".join(random.choice(old_line[1]))
 
-    should_mutate_again = random.random() < 0.6
+    should_mutate_again = random.random() < REMUTATE_CHANCE
 
     result = "\n".join(program_lines)
 
@@ -164,13 +193,10 @@ def mutate(program: str):
 def reproduce(
     population: list[str],
     mutation_function,
-    survive_top=0.1,
-    survive_random=0.20,
-    new_random=0.25,
 ):
-    survived_top = math.ceil(len(population) * survive_top)
-    survived_random = math.ceil(len(population) * survive_random)
-    new_programs = math.ceil(len(population) * new_random)
+    survived_top = math.ceil(len(population) * SURVIVE_TOP)
+    survived_random = math.ceil(len(population) * SURVIVE_RANDOM)
+    new_programs = math.ceil(len(population) * NEW_RANDOM)
 
     reproducing_programs = population[:survived_top] + random.sample(
         population[survived_top:], survived_random
