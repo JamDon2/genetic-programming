@@ -11,7 +11,6 @@ from gc_utils import (
     split_command,
     combine_command,
 )
-from gc_tests import tests
 
 
 def create_population(n=100, length_function=lambda: int(random_inverse_square() * 3)):
@@ -37,7 +36,9 @@ def static_fitness(program: str) -> int:
     return fitness_score
 
 
-def fitness(population: list[str], runner: Runner) -> list[int]:
+def fitness(
+    population: list[str], runner: Runner, tests: list[tuple[list[int], list[int]]]
+) -> list[int]:
     survivors: list[tuple[str, int]] = [
         (program, i) for i, program in enumerate(population)
     ]
@@ -71,10 +72,9 @@ def fitness(population: list[str], runner: Runner) -> list[int]:
 
 
 def evaluate_population(
-    population: list[str],
-    runner: Runner,
+    population: list[str], runner: Runner, tests: list[tuple[list[int], list[int]]]
 ) -> tuple[list[str], list[int]]:
-    fitness_scores = fitness(population, runner)
+    fitness_scores = fitness(population, runner, tests)
 
     return [
         program
@@ -199,8 +199,10 @@ if __name__ == "__main__":
 
     runner.create_workers(1)
 
+    from gc_tests import tests
+
     while True:
-        population, fitness_scores = evaluate_population(population, runner)
+        population, fitness_scores = evaluate_population(population, runner, tests)
 
         print(
             f"Best of generation {generation}:",
